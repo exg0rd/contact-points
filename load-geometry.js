@@ -16,10 +16,10 @@ export const loadObject = async (path, scene, main) => {
         });
         const wireframe = new THREE.LineSegments(geometry, material);
         geometry.computeBoundingBox();
-        const boundingBox = geometry.boundingBox;
-        const center = new THREE.Vector3();
-        boundingBox.getCenter(center);
-        wireframe.position.sub(center);
+        // const boundingBox = geometry.boundingBox;
+        // const center = new THREE.Vector3();
+        // boundingBox.getCenter(center);
+        // wireframe.position.sub(center);
         scene.add(wireframe);
 
         let coloredMesh;
@@ -29,12 +29,13 @@ export const loadObject = async (path, scene, main) => {
           });
           fillmaterial.polygonOffset = true;
           fillmaterial.polygonOffsetUnits = 1;
+          fillmaterial.opacity = 0.6;
           coloredMesh = new THREE.Mesh(
             geo.scale(SCALING_FACTOR, SCALING_FACTOR, SCALING_FACTOR),
             fillmaterial
           );
           scene.add(coloredMesh);
-          coloredMesh.position.sub(center);
+          // coloredMesh.position.sub(center);
         }
 
         console.log(`Added ${path}`);
