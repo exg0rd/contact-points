@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
+import { Triangle } from "./triangle";
 
 class Point {
   constructor(x, y, z, faceIndex) {
@@ -101,7 +102,7 @@ export const getFaceIndices = async (mesh) => {
     const p2 = [positions.getX(v2), positions.getY(v2), positions.getZ(v2)];
     const p3 = [positions.getX(v3), positions.getY(v3), positions.getZ(v3)];
 
-    polygons.push([p1, p2, p3]);
+    polygons.push(new Triangle(p1, p2, p3));
   }
 
   return polygons;

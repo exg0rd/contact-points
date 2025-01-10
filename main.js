@@ -8,6 +8,8 @@ import {
   renderVertices,
 } from "./geometryManipulation";
 import { GUI } from "dat.gui";
+import { computeNormals } from "./triangle";
+import { Triangle } from "./triangle";
 
 const gui = new GUI();
 
@@ -73,14 +75,14 @@ light.position.set(0, 0, 0);
 scene.add(light);
 
 const { wireframe: frame1, coloredMesh: mesh1 } = await loadObject(
-  "models/truss1.stl",
+  "models/test.stl",
   scene,
   true,
   camera
 );
 
 const { wireframe: frame2, coloredMesh: mesh2 } = await loadObject(
-  "models/truss2.stl",
+  "models/truss1.stl",
   scene,
   false
 );
@@ -88,6 +90,10 @@ const { wireframe: frame2, coloredMesh: mesh2 } = await loadObject(
 renderVertices(frame2);
 
 const polygons = await getFaceIndices(mesh1);
+
+const indexedPolygons = computeNormals(polygons);
+
+console.log(indexedPolygons);
 
 gui.add(Body1, "showPolygonWithId", 0, polygons.length).onChange(drawTriangle);
 
@@ -97,7 +103,7 @@ function drawTriangle() {
   const index = Body1.showPolygonWithId;
 
   if (index >= 0 && index < polygons.length) {
-    const [p1, p2, p3] = polygons[index];
+    const [p1, p2, p3] = polygons[index].getPoints();
     showPolygon(p1, p2, p3);
   } else {
     console.error(`Invalid index: ${index}`);
@@ -107,8 +113,6 @@ function drawTriangle() {
 function showPolygon(p1, p2, p3) {
   if (Body1.showPolygonWithId > polygons.length) return;
   if (currentTriangle) scene.remove(currentTriangle);
-
-  const points = polygons[Body1.showPolygonWithId];
 
   const geom = new THREE.BufferGeometry();
 
@@ -149,7 +153,5 @@ animate();
 
 //TODO
 
-//HIGHLIGHT ALL POINTS OF SECOND BODY
-//FIX CAMERA
 //MAYBE WRITE EFFECTIVE SEARCH ALGORIGTHM
-//HIGHLIGHT TRIANGLES WITH PAIRS AND MAKE THEM SHOW BY INDEX
+//kd tree for vertices of second body
