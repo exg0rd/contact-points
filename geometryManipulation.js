@@ -2,28 +2,12 @@ import * as THREE from "three";
 import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
 import { Triangle } from "./triangle";
 
-class Point {
-  constructor(x, y, z, faceIndex) {
-    this._x = x;
-    this._y = y;
-    this._z = z;
-    this._faceIndex = faceIndex;
-  }
-
-  get x() {
-    return this._x;
-  }
-
-  get y() {
-    return this._y;
-  }
-
-  get z() {
-    return this._z;
-  }
-
-  get faceIndex() {
-    return this._faceIndex;
+export class Point {
+  constructor(x, y, z, id) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.id = id;
   }
 
   toArray() {
@@ -35,7 +19,7 @@ class Point {
   }
 
   toString() {
-    return `Point(x=${this.x}, y=${this.y}, z=${this.z}, faceIndex=${this.faceIndex})`;
+    return `${this.x},${this.y},${this.z}`;
   }
 }
 
@@ -82,13 +66,20 @@ export const renderVertices = (mesh) => {
   mesh.add(group);
 };
 
+export const renderVertice = (vertice) => {
+  const sphereGeometry = new THREE.SphereGeometry(0.16, 16, 16);
+  const sphereMaterial = new THREE.MeshBasicMaterial({ color: "BLUE" });
+  const vertexSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  vertexSphere.position.copy(vertice.toVector3());
+  scene.add(vertexSphere);
+};
+
 export const getFaceIndices = async (mesh) => {
   const scene = mesh.parent;
   const geom = mesh.geometry;
 
   const indexedGeom = BufferGeometryUtils.mergeVertices(geom, 0.0001);
   const indices = indexedGeom.getIndex();
-  console.log(indices);
   const positions = indexedGeom.getAttribute("position");
 
   const polygons = [];
@@ -102,7 +93,7 @@ export const getFaceIndices = async (mesh) => {
     const p2 = [positions.getX(v2), positions.getY(v2), positions.getZ(v2)];
     const p3 = [positions.getX(v3), positions.getY(v3), positions.getZ(v3)];
 
-    polygons.push(new Triangle(p1, p2, p3));
+    polygons.push(new Triangle(p1, p2, p3, i));
   }
 
   return polygons;

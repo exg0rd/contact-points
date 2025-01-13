@@ -4,10 +4,15 @@
 		<meta charset="utf-8">
 		<title>My first three.js app</title>
 		<style>
-			body { margin: 0; }
+			body { margin: 0; overflow: hidden;}
+			input { width: 200px;}
 		</style>
 	</head>
 	<body>
+		<input type="number" min="1" max="99" placeholder="Выберите грань 1 тела" id="faceInput1">
+		<input type="number" min="1" max="99" placeholder="Выберите грань 2 тела" id="faceInput2">
+		<button id="calcpairs">Рассчитать контактные точки</button>
+		<button id="clearfaces">Скрыть выбранные грани</button>
 		<script type="module" src="/main.js"></script>
 	</body>
 </html>
