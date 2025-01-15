@@ -10,6 +10,12 @@ import {
 import { GUI } from "dat.gui";
 import { calculatePairs, computeNormals, highlightFace } from "./triangle";
 import { Point } from "./geometryManipulation";
+import {
+  INTERSECTION,
+  HOLLOW_INTERSECTION,
+  Brush,
+  Evaluator,
+} from "three-bvh-csg";
 
 const gui = new GUI();
 
@@ -75,14 +81,14 @@ light.position.set(0, 0, 0);
 scene.add(light);
 
 const { wireframe: frame1, coloredMesh: mesh1 } = await loadObject(
-  "models/truss2.stl",
+  "models/test.stl",
   scene,
   true,
   camera
 );
 
 const { wireframe: frame2, coloredMesh: mesh2 } = await loadObject(
-  "models/truss2.stl",
+  "models/test.stl",
   scene,
   false
 );
@@ -152,6 +158,8 @@ const faceInput1 = document.getElementById("faceInput1");
 
 const faceInput2 = document.getElementById("faceInput2");
 
+const foundPairs = document.getElementById("countlabel");
+
 faceInput1.addEventListener("input", () => {
   highlightFace(1, triangles1, Number(faceInput1.value), scene, mesh1);
 });
@@ -173,6 +181,46 @@ function renderPairs(pairs) {
 }
 
 const calcPairsButton = document.getElementById("calcpairs");
+const showContactSurface = document.getElementById("showsurface");
+
+let intersectionMesh;
+
+showContactSurface.addEventListener("input", () => {
+  const shouldBeVisible = showContactSurface.checked;
+
+  if (!intersectionMesh) {
+    intersectionMesh = showContactSurfaceF();
+    scene.add(intersectionMesh);
+    intersectionMesh.position.y += 0.2;
+  }
+
+  intersectionMesh.visible = shouldBeVisible;
+});
+function showContactSurfaceF() {
+  const brush1 = new Brush(
+    mesh1.geometry,
+    new THREE.MeshBasicMaterial({ color: "RED" })
+  );
+
+  mesh2.updateMatrixWorld();
+  mesh2.geometry.applyMatrix4(mesh2.matrixWorld);
+
+  // const worldPosition = new THREE.Vector3();
+  // const worldQuaternion = new THREE.Quaternion();
+
+  // mesh2.getWorldPosition(worldPosition);
+  // mesh2.getWorldQuaternion(worldQuaternion);
+
+  const brush2 = new Brush(mesh2.geometry, mesh1.material);
+  // brush2.position.copy(worldPosition);
+  // brush2.quaternion.copy(worldQuaternion);
+
+  const evaluator = new Evaluator();
+
+  const result = evaluator.evaluate(brush1, brush2, HOLLOW_INTERSECTION);
+
+  return result;
+}
 
 calcPairsButton.addEventListener("click", () => {
   const body1Triangles = triangles1.filter(
@@ -185,24 +233,29 @@ calcPairsButton.addEventListener("click", () => {
 
   const vertices = [];
 
-  const idMap = new Map();
+  const idMap = new Set();
 
   for (let i = 0; i < body2Triangles.length; i++) {
     for (const point of body2Triangles[i].getPoints()) {
+      const coordKey = `${point[0]},${point[1]},${point[2]}`;
       const newPoint = new Point(
         point[0],
         point[1],
         point[2],
         body2Triangles[i].id
       );
-      if (!idMap.has(newPoint.id)) {
-        idMap.set(newPoint.id, newPoint.id);
+      if (!idMap.has(coordKey)) {
+        idMap.add(coordKey);
         vertices.push(newPoint);
       }
     }
   }
 
   const pairs = calculatePairs(body1Triangles, vertices);
+  foundPairs.innerText = `Найдено пар треугольник - узел: ${
+    new Set(pairs.map((obj) => obj[0].id)).size
+  }`;
+  console.log(pairs);
   renderPairs(pairs);
 });
 

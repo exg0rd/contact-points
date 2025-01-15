@@ -10,6 +10,7 @@ export const loadObject = async (path, scene, main) => {
       path,
       (geo) => {
         const geometry = new THREE.WireframeGeometry(geo);
+
         geometry.scale(SCALING_FACTOR, SCALING_FACTOR, SCALING_FACTOR);
         const material = new THREE.LineBasicMaterial({
           color: main ? "RED" : "BLUE",
@@ -25,8 +26,13 @@ export const loadObject = async (path, scene, main) => {
         });
         fillmaterial.polygonOffset = true;
         fillmaterial.polygonOffsetUnits = 1;
+        const coloredGeo = geo.clone();
+        coloredGeo.setAttribute(
+          "uv",
+          new THREE.BufferAttribute(new Float32Array([], 1))
+        );
         coloredMesh = new THREE.Mesh(
-          geo.scale(SCALING_FACTOR, SCALING_FACTOR, SCALING_FACTOR),
+          coloredGeo.scale(SCALING_FACTOR, SCALING_FACTOR, SCALING_FACTOR),
           fillmaterial
         );
         scene.add(coloredMesh);
