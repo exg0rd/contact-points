@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 
-const SCALING_FACTOR = 0.5;
+const SCALING_FACTOR = 1;
 
 export const loadObject = async (path, scene, main) => {
   return new Promise((resolve, reject) => {

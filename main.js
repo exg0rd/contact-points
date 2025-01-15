@@ -4,8 +4,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import loadObject from "./load-geometry";
 import {
   getFaceIndices,
-  getVertices,
   renderVertices,
+  renderVertice,
 } from "./geometryManipulation";
 import { GUI } from "dat.gui";
 import { calculatePairs, computeNormals, highlightFace } from "./triangle";
@@ -75,14 +75,14 @@ light.position.set(0, 0, 0);
 scene.add(light);
 
 const { wireframe: frame1, coloredMesh: mesh1 } = await loadObject(
-  "models/test.stl",
+  "models/truss2.stl",
   scene,
   true,
   camera
 );
 
 const { wireframe: frame2, coloredMesh: mesh2 } = await loadObject(
-  "models/test.stl",
+  "models/truss2.stl",
   scene,
   false
 );
@@ -99,15 +99,11 @@ let triangles2 = computeNormals(polygons2);
 
 gui.add(Body1, "showPolygonWithId", 0, polygons1.length).onChange(drawTriangle);
 
-let currentTriangle = null;
-
 function drawTriangle(triangle) {
-  showPolygon(triangle.v1, triangle.v2, triangle.v3);
+  showPolygon(triangle.a, triangle.b, triangle.c);
 }
 
 export function showPolygon(p1, p2, p3) {
-  if (currentTriangle) scene.remove(currentTriangle);
-
   const geom = new THREE.BufferGeometry();
 
   const vertices = new Float32Array([
@@ -124,8 +120,8 @@ export function showPolygon(p1, p2, p3) {
 
   geom.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
 
-  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  currentTriangle = new THREE.Mesh(geom, material);
+  const material = new THREE.MeshBasicMaterial({ color: "BLUE" });
+  const currentTriangle = new THREE.Mesh(geom, material);
 
   scene.add(currentTriangle);
 }
@@ -170,10 +166,9 @@ function animate() {
 }
 
 function renderPairs(pairs) {
-  console.log(pairs);
-  for (let i = 0; i <= pairs.length; i += 2) {
-    drawTriangle(pairs[i]);
-    drawVertice[pairs[i + 1]];
+  for (let i = 0; i < pairs.length; i += 1) {
+    drawTriangle(pairs[i][0].getTriangle());
+    renderVertice[pairs[i][1]];
   }
 }
 
@@ -188,14 +183,11 @@ calcPairsButton.addEventListener("click", () => {
     (triangle) => triangle.faceIndex === Number(faceInput2.value)
   );
 
-  console.log("FACE BODY 2 TRIANGLES", body2Triangles);
-
   const vertices = [];
 
   const idMap = new Map();
 
   for (let i = 0; i < body2Triangles.length; i++) {
-    console.log(body2Triangles[i].getPoints(), body2Triangles[i].id);
     for (const point of body2Triangles[i].getPoints()) {
       const newPoint = new Point(
         point[0],
@@ -203,15 +195,12 @@ calcPairsButton.addEventListener("click", () => {
         point[2],
         body2Triangles[i].id
       );
-      console.log("NEW POINT", newPoint);
       if (!idMap.has(newPoint.id)) {
-        idMap.set(newPoint.id, String(newPoint.id));
+        idMap.set(newPoint.id, newPoint.id);
         vertices.push(newPoint);
       }
     }
   }
-  console.log(idMap);
-  console.log(vertices);
 
   const pairs = calculatePairs(body1Triangles, vertices);
   renderPairs(pairs);
@@ -219,7 +208,5 @@ calcPairsButton.addEventListener("click", () => {
 
 animate();
 
-//TODO
-//для каждого треугольника грани тела 1 рассмотреть каждую точку которая находится в его bounding rect, посчитать расстояние
-// между ней и плоскостью треугольника через объем пирамиды, если он меньше эпсилона, составить пару треугольник - точка
-// готовыми функциями нарисовать
+//todo
+//fix coords

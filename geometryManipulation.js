@@ -49,7 +49,7 @@ export const renderVertices = (mesh) => {
   const scene = mesh.parent;
   const group = new THREE.Group();
 
-  const sphereGeometry = new THREE.SphereGeometry(0.16, 16, 16);
+  const sphereGeometry = new THREE.SphereGeometry(0.01, 16, 16);
   const sphereMaterial = new THREE.MeshBasicMaterial({ color: "RED" });
 
   const geom = mesh.geometry;
@@ -67,7 +67,7 @@ export const renderVertices = (mesh) => {
 };
 
 export const renderVertice = (vertice) => {
-  const sphereGeometry = new THREE.SphereGeometry(0.16, 16, 16);
+  const sphereGeometry = new THREE.SphereGeometry(0.01, 16, 16);
   const sphereMaterial = new THREE.MeshBasicMaterial({ color: "BLUE" });
   const vertexSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
   vertexSphere.position.copy(vertice.toVector3());
@@ -75,10 +75,13 @@ export const renderVertice = (vertice) => {
 };
 
 export const getFaceIndices = async (mesh) => {
-  const scene = mesh.parent;
-  const geom = mesh.geometry;
+  mesh.updateMatrixWorld();
+  const worldMatrix = mesh.matrixWorld;
 
-  const indexedGeom = BufferGeometryUtils.mergeVertices(geom, 0.0001);
+  const indexedGeom = BufferGeometryUtils.mergeVertices(
+    mesh.geometry.clone(),
+    0.0001
+  );
   const indices = indexedGeom.getIndex();
   const positions = indexedGeom.getAttribute("position");
 
@@ -89,11 +92,27 @@ export const getFaceIndices = async (mesh) => {
     const v2 = indices.getX(i + 1);
     const v3 = indices.getX(i + 2);
 
-    const p1 = [positions.getX(v1), positions.getY(v1), positions.getZ(v1)];
-    const p2 = [positions.getX(v2), positions.getY(v2), positions.getZ(v2)];
-    const p3 = [positions.getX(v3), positions.getY(v3), positions.getZ(v3)];
+    const p1 = new THREE.Vector3(
+      positions.getX(v1),
+      positions.getY(v1),
+      positions.getZ(v1)
+    );
+    const p2 = new THREE.Vector3(
+      positions.getX(v2),
+      positions.getY(v2),
+      positions.getZ(v2)
+    );
+    const p3 = new THREE.Vector3(
+      positions.getX(v3),
+      positions.getY(v3),
+      positions.getZ(v3)
+    );
 
-    polygons.push(new Triangle(p1, p2, p3, i));
+    p1.applyMatrix4(worldMatrix);
+    p2.applyMatrix4(worldMatrix);
+    p3.applyMatrix4(worldMatrix);
+
+    polygons.push(new Triangle(new THREE.Triangle(p1, p2, p3), i / 3));
   }
 
   return polygons;
